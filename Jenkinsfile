@@ -25,23 +25,23 @@ pipeline {
             }
         }
 
-        // stage('Install Dependencies') {
-        //     steps {
-        //         sh 'npm install'
-        //     }
-        // }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
 
-        // stage('Test') {
-        //     steps {
-        //         sh 'npm test || true' // use || true if no test scripts for now
-        //     }
-        // }
+        stage('Test') {
+            steps {
+                sh 'npm test || true' // use || true if no test scripts for now
+            }
+        }
 
-        // stage('Deploy') {
-        //     steps {
-        //         // assuming SSH is set up and Ansible or SCP is ready
-        //         sh 'echo "Deploying..."'
-        //     }
-        // }
+        stage('Deploy') {
+            steps {
+                // assuming SSH is set up and Ansible or SCP is ready
+                sh 'echo "Deploying..."'
+            }
+        }
     }
 }

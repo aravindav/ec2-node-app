@@ -22,7 +22,7 @@
 
     - name: Copy app files to server
       synchronize:
-        src: ../
+        src: "{{ lookup('env','WORKSPACE') }}"
         dest: /home/ubuntu/node-app/
         recursive: yes
         rsync_opts:

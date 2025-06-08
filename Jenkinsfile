@@ -37,10 +37,17 @@ pipeline {
             }
         }
 
+        // stage('Deploy') {
+        //     steps {
+        //         // assuming SSH is set up and Ansible or SCP is ready
+        //         sh 'echo "Deploying..."'
+        //     }
+        // }
         stage('Deploy') {
             steps {
-                // assuming SSH is set up and Ansible or SCP is ready
-                sh 'echo "Deploying..."'
+                sshagent(['aws-ec2-key']) {
+                sh 'ansible-playbook -i ansible/inventory.ini ansible/deploy.yml'
+                }
             }
         }
     }

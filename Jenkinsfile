@@ -1,10 +1,21 @@
 pipeline {
     agent any
 
+     tools {
+        nodejs 'NodeJS-18'
+    }
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/aravindav/ec2-node-app.git'
+            }
+        }
+
+          stage('Verify Node Version') {
+            steps {
+                echo "Verifying that the correct Node.js version is in the PATH"
+                sh 'node --version'
+                sh 'npm --version'
             }
         }
 

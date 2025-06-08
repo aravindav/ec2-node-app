@@ -1,0 +1,41 @@
+---
+- name: Deploy Node.js App
+  hosts: app
+  become: true
+
+  tasks:
+    - name: Update APT packages
+      apt:
+        update_cache: yes
+
+    - name: Install Node.js and npm
+      apt:
+        name:
+          - nodejs
+          - npm
+        state: present
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Copy app files to server
+      synchronize:
+        src: ../
+        dest: /home/ubuntu/node-app/
+        recursive: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.git"
+
+    - name: Install app dependencies
+      shell: npm install
+      args:
+        chdir: /home/ubuntu/node-app/
+
+    - name: Start app with pm2
+      shell: pm2 start app.js --name node-app
+      args:
+        chdir: /home/ubuntu/node-app/
+

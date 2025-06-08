@@ -22,7 +22,7 @@
 
     - name: Copy app files to server
       synchronize:
-        src: "{{ lookup('env','WORKSPACE') }}"
+        src: ../
         dest: /home/ubuntu/node-app/
         recursive: yes
         rsync_opts:
@@ -35,7 +35,6 @@
         chdir: /home/ubuntu/node-app/
 
     - name: Start app with pm2
-      shell: pm2 start app.js --name node-app
+      shell: pm2 start index.js --name node-app
       args:
         chdir: /home/ubuntu/node-app/
-

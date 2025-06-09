@@ -1,5 +1,5 @@
 ---
-- name: Deploy Node.js App
+- name: Deploy Simple Node.js App
   hosts: app
   become: true
   tasks:
@@ -21,7 +21,7 @@
         dest: /tmp/nodesource_setup.sh
         mode: '0755'
 
-    - name: Execute NodeSource setup script to add repository
+    - name: Execute NodeSource setup script
       ansible.builtin.shell:
         cmd: /tmp/nodesource_setup.sh
         creates: /etc/apt/sources.list.d/nodesource.list
@@ -29,12 +29,6 @@
     - name: Install Node.js from NodeSource repository
       ansible.builtin.apt:
         name: nodejs
-        state: present
-
-    - name: Install PM2 process manager globally
-      community.general.npm:
-        name: pm2
-        global: yes
         state: present
 
     - name: Copy application files to the server
@@ -47,14 +41,21 @@
           - "--exclude=.git"
           - "--exclude=ansible"
 
-    - name: Install application dependencies with npm
-      community.general.npm:
+    - name: Install application dependencies
+      ansible.builtin.npm:
         path: /home/ubuntu/node-app/
 
-    # --- THIS TASK IS NOW CORRECTED ---
-    - name: Ensure the application is started and managed by PM2
+    - name: Stop any existing application process
       ansible.builtin.shell:
-        cmd: pm2 startOrRestart index.js --name node-app
-        # 'chdir' is a direct parameter of the shell module, just like 'cmd'
+        # This command finds any process with 'node index.js' and stops it.
+        # '|| true' ensures this step doesn't fail if the app isn't running.
+        cmd: "pkill -f 'node index.js' || true"
+
+    - name: Start the application in the background
+      ansible.builtin.shell:
+        # 'nohup' keeps the app running after we disconnect.
+        # '&' runs the command in the background.
+        # Logs will be saved to app.log in the app directory.
+        cmd: "nohup node index.js > app.log 2>&1 &"
+      args:
         chdir: /home/ubuntu/node-app/
-    # --- END OF CORRECTION ---

@@ -6,9 +6,8 @@
     - name: Update APT package cache
       ansible.builtin.apt:
         update_cache: yes
-        cache_valid_time: 3600 # Update only if cache is older than 1 hour
+        cache_valid_time: 3600
 
-    # --- CORRECTED NODE.JS INSTALLATION ---
     - name: Ensure dependencies for NodeSource are installed
       ansible.builtin.apt:
         name:
@@ -22,18 +21,19 @@
         dest: /tmp/nodesource_setup.sh
         mode: '0755'
 
+    # --- THIS TASK IS NOW CORRECTED ---
     - name: Execute NodeSource setup script to add repository
       ansible.builtin.shell:
         cmd: /tmp/nodesource_setup.sh
-      args:
-        # This makes the task idempotent; it won't run again if the file exists
+        # 'creates' is a direct parameter of the shell module.
+        # It should not be nested under 'args:'.
         creates: /etc/apt/sources.list.d/nodesource.list
+    # --- END OF CORRECTION ---
 
     - name: Install Node.js and npm from NodeSource repository
       ansible.builtin.apt:
         name: nodejs
         state: present
-    # --- END OF CORRECTION ---
 
     - name: Install PM2 process manager globally
       community.general.npm:
@@ -46,10 +46,10 @@
         src: ../
         dest: /home/ubuntu/node-app/
         recursive: yes
-        delete: yes # Deletes files on the destination that are not in the source
+        delete: yes
         rsync_opts:
           - "--exclude=.git"
-          - "--exclude=ansible" # Also exclude the ansible directory itself
+          - "--exclude=ansible"
 
     - name: Install application dependencies with npm
       community.general.npm:

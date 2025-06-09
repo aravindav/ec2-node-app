@@ -43,16 +43,17 @@ pipeline {
         //         sh 'echo "Deploying..."'
         //     }
         // }
-        stage('Deploy with Ansible') {
-                steps {
-                    sshagent(credentials: ['aws-ec2-key']) {
-                        sh '''
-                            ansible-playbook -i ansible/inventory ansible/deploy.yml \
-                            --ssh-extra-args "-o StrictHostKeyChecking=no"
-                          '''
-                    }
+       stage('Deploy with Ansible') {
+            steps {
+                sshagent(credentials: ['aws-ec2-key']) {
+                    sh '''
+                        ansible-playbook -i ansible/inventory.ini ansible/deploy.yml \
+                        --ssh-extra-args "-o StrictHostKeyChecking=no"
+                    '''
                 }
+            }
         }
+
         // stage('Deploy') {
         //     steps {
         //         sshagent(['aws-ec2-key']) {

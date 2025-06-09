@@ -22,10 +22,10 @@
         mode: "0755"
 
     - name: Execute NodeSource setup script
-      ansible.builtin.shell:
-        cmd: /tmp/nodesource_setup.sh
+      ansible.builtin.shell: /tmp/nodesource_setup.sh
+      args:
         creates: /etc/apt/sources.list.d/nodesource.list
-
+   
     - name: Install Node.js from NodeSource repository
       ansible.builtin.apt:
         name: nodejs

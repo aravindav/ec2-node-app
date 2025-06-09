@@ -79,13 +79,14 @@
       ansible.builtin.systemd:
         name: node-app
         enabled: yes
-        state: started
+        state: restarted
+        daemon_reload: yes
 
 # Handlers are special tasks that only run when "notified" by another task.
 # This block should be at the end of the playbook, at the same indentation level as 'hosts' and 'tasks'.
-handlers:
-  - name: Restart node app
-    ansible.builtin.systemd:
-      name: node-app
-      state: restarted
-      daemon_reload: yes # Reloads systemd to pick up changes in the service file
+# handlers:
+#   - name: Restart node app
+#     ansible.builtin.systemd:
+#       name: node-app
+#       state: restarted
+#       daemon_reload: yes # Reloads systemd to pick up changes in the service file

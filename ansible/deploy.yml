@@ -1,40 +1,19 @@
 ---
-- name: Deploy Simple Node.js App
+- name: Deploy Simple Node.js App Without NodeSource or PM2
   hosts: app
   become: true
+
   tasks:
     - name: Update APT package cache
       ansible.builtin.apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Ensure dependencies for NodeSource are installed
+    - name: Install Node.js and npm from default Ubuntu repos
       ansible.builtin.apt:
         name:
-          - ca-certificates
-          - curl
-        state: present
-
-    - name: Download NodeSource setup script for Node.js 20.x
-      ansible.builtin.get_url:
-        url: https://deb.nodesource.com/setup_20.x
-        dest: /tmp/nodesource_setup.sh
-        mode: '0755'
-
-    - name: Execute NodeSource setup script
-      ansible.builtin.shell:
-        cmd: /tmp/nodesource_setup.sh
-        creates: /etc/apt/sources.list.d/nodesource.list
-
-    - name: Install Node.js from NodeSource repository
-      ansible.builtin.apt:
-        name: nodejs
-        state: present
-
-    - name: Install PM2 process manager globally
-      community.general.npm:
-        name: pm2
-        global: yes
+          - nodejs
+          - npm
         state: present
 
     - name: Copy application files to the server
@@ -46,12 +25,19 @@
         rsync_opts:
           - "--exclude=.git"
           - "--exclude=ansible"
+          - "--exclude=node_modules"
 
     - name: Install application dependencies
-      community.general.npm:
-        path: /home/ubuntu/node-app/
+      ansible.builtin.shell: npm install
+      args:
+        chdir: /home/ubuntu/node-app/
 
-    - name: Ensure the application is started and managed by PM2
-      ansible.builtin.shell:
-        cmd: pm2 startOrRestart index.js --name node-app
+    - name: Stop any running Node.js process
+      ansible.builtin.shell: |
+        pkill -f "node index.js" || true
+
+    - name: Start the application using nohup
+      ansible.builtin.shell: |
+        nohup node index.js > app.log 2>&1 &
+      args:
         chdir: /home/ubuntu/node-app/

@@ -1,62 +1,62 @@
 ---
-- name: Configure and Deploy Node.js Application (No Handlers)
+- name: Configure and Deploy Node.js Application
   hosts: app
   become: true
 
   vars:
-    # This correctly matches your Jenkins and server environment
+    # Set to the Node.js version used in your Jenkins/dev environment
     node_major_version: "18"
+    # The path where your application will be deployed
     app_path: "/home/ubuntu/node-app"
 
+  #############################################
+  # SECTION 1: SYSTEM PREPARATION & DEPENDENCIES
+  #############################################
   tasks:
     - name: Update APT package cache
       ansible.builtin.apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Install prerequisite packages
+    - name: Install prerequisite packages for adding repositories
       ansible.builtin.apt:
         name:
           - ca-certificates
           - curl
         state: present
 
-    - name: Ensure /etc/apt/keyrings directory exists
+  #############################################
+  # SECTION 2: NODE.JS INSTALLATION
+  #############################################
+    - name: Ensure /etc/apt/keyrings directory exists for GPG keys
       ansible.builtin.file:
         path: /etc/apt/keyrings
         state: directory
         mode: '0755'
 
-    - name: Add NodeSource GPG key
+    - name: Add the NodeSource GPG key
       ansible.builtin.get_url:
         url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
         dest: /etc/apt/keyrings/nodesource.gpg
         mode: '0644'
 
-    # ---- START: New self-healing tasks to prevent conflicts ----
-    - name: Remove conflicting nodesource.list file if it exists
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/nodesource.list
-        state: absent
-
-    - name: Remove conflicting nodesource GPG key if it exists
-      ansible.builtin.file:
-        path: /usr/share/keyrings/nodesource.gpg
-        state: absent
-    # ---- END: New self-healing tasks ----
-
-    - name: Add NodeSource repository for Node.js
+    - name: Add the NodeSource repository
       ansible.builtin.apt_repository:
         repo: "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ node_major_version }}.x nodistro main"
         state: present
         update_cache: yes
 
-    - name: Install Node.js from NodeSource
+    - name: Install Node.js from the NodeSource repository
       ansible.builtin.apt:
         name: nodejs
         state: present
 
-    - name: Copy application files to the server
+  #############################################
+  # SECTION 3: APPLICATION DEPLOYMENT
+  #############################################
+    # NOTE: For even better reliability, consider the "Build Artifact" model
+    # where you 'unarchive' a pre-built package instead of running npm on the server.
+    - name: Copy application source code to the server
       ansible.builtin.synchronize:
         src: ../
         dest: "{{ app_path }}"
@@ -66,23 +66,37 @@
           - "--exclude=.git"
           - "--exclude=ansible"
           - "--exclude=node_modules"
+      notify: Restart node app # Triggers the handler if code changes
 
-    - name: Install application dependencies
+    - name: Install application dependencies with npm
       ansible.builtin.npm:
         path: "{{ app_path }}"
-      become_user: ubuntu
+      become_user: ubuntu # Secure: runs npm as a non-root user
 
-    - name: Copy systemd service file
+  #############################################
+  # SECTION 4: PROCESS MANAGEMENT (SYSTEMD)
+  #############################################
+    - name: Copy the systemd service file for the app
       ansible.builtin.copy:
-        src: node-app.service
+        src: node-app.service # Assumes this file is in your 'ansible' directory
         dest: /etc/systemd/system/node-app.service
-        owner: root
-        group: root
         mode: '0644'
+      notify: Restart node app # Also triggers the handler if the service file changes
 
-    - name: Ensure service is enabled and restarted on every deploy
+    - name: Ensure the node app service is started and enabled on boot
       ansible.builtin.systemd:
         name: node-app
         enabled: yes
-        state: restarted
-        daemon_reload: yes
+        state: started
+
+  #############################################
+  # SECTION 5: HANDLERS
+  #############################################
+  # Handlers are special tasks that only run when "notified" by a change.
+  # This block should be at the end, at the same indentation level as 'hosts' and 'tasks'.
+handlers:
+  - name: Restart node app
+    ansible.builtin.systemd:
+      name: node-app
+      state: restarted
+      daemon_reload: yes # Ensures systemd re-reads the service file

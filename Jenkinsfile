@@ -5,6 +5,14 @@ pipeline {
         nodejs 'NodeJS-18'
     }
     stages {
+
+         stage('Clean Workspace') {
+            steps {
+                echo "Cleaning up the workspace before build..."
+                cleanWs()
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/aravindav/ec2-node-app.git'

@@ -11,6 +11,44 @@
     # ... all the tasks for apt, NodeSource, etc. remain the same ...
     # (Update APT, install curl, create keyring dir, get GPG key, add repo, install nodejs)
 
+    # THIS ENTIRE BLOCK OF TASKS IS MISSING FROM YOUR LATEST PIPELINE RUN
+  tasks:
+    - name: Update APT package cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisite packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Ensure /etc/apt/keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add NodeSource GPG key
+      ansible.builtin.get_url:
+        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+        dest: /etc/apt/keyrings/nodesource.gpg
+        mode: '0644'
+
+    - name: Add NodeSource repository for Node.js
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main"
+        state: present
+        update_cache: yes
+
+    - name: Install Node.js from NodeSource
+      ansible.builtin.apt:
+        name: nodejs
+        state: present
+# THE MISSING BLOCK ENDS HERE
+
     - name: Copy application files to the server
       ansible.builtin.synchronize:
         src: ../

@@ -8,11 +8,6 @@
     app_path: "/home/ubuntu/node-app"
 
   tasks:
-    # ... all the tasks for apt, NodeSource, etc. remain the same ...
-    # (Update APT, install curl, create keyring dir, get GPG key, add repo, install nodejs)
-
-    # THIS ENTIRE BLOCK OF TASKS IS MISSING FROM YOUR LATEST PIPELINE RUN
-  tasks:
     - name: Update APT package cache
       ansible.builtin.apt:
         update_cache: yes
@@ -47,7 +42,6 @@
       ansible.builtin.apt:
         name: nodejs
         state: present
-# THE MISSING BLOCK ENDS HERE
 
     - name: Copy application files to the server
       ansible.builtin.synchronize:
@@ -59,7 +53,6 @@
           - "--exclude=.git"
           - "--exclude=ansible"
           - "--exclude=node_modules"
-      # The 'notify' line is removed
 
     - name: Install application dependencies
       ansible.builtin.npm:
@@ -73,14 +66,10 @@
         owner: root
         group: root
         mode: '0644'
-      # The 'notify' line is removed
 
-    # THIS TASK IS THE KEY CHANGE
     - name: Ensure service is enabled and restarted on every deploy
       ansible.builtin.systemd:
         name: node-app
         enabled: yes
-        state: restarted  # <-- This forces a restart on every run
-        daemon_reload: yes # <-- Moved from the handler to here
-
-# The 'handlers:' block is completely removed from the end of the file.
+        state: restarted
+        daemon_reload: yes

@@ -28,16 +28,15 @@
           - "--exclude=node_modules"
 
     - name: Install application dependencies
-      ansible.builtin.shell: npm install
-      args:
+      ansible.builtin.shell:
+        cmd: npm install
         chdir: /home/ubuntu/node-app/
 
     - name: Stop any running Node.js process
-      ansible.builtin.shell: |
-        pkill -f "node index.js" || true
+      ansible.builtin.shell:
+        cmd: pkill -f "node index.js" || true
 
     - name: Start the application using nohup
-      ansible.builtin.shell: |
-        nohup node index.js > app.log 2>&1 &
-      args:
+      ansible.builtin.shell:
+        cmd: nohup node index.js > app.log 2>&1 &
         chdir: /home/ubuntu/node-app/

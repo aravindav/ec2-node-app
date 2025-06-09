@@ -5,7 +5,7 @@
   vars:
     # Define the version of Node.js you want to install
     # See available versions at: https://github.com/nodesource/distributions
-    node_major_version: "20"
+    node_major_version: "18"
 
   tasks:
     - name: Update APT package cache

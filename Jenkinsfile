@@ -43,6 +43,14 @@ pipeline {
         //         sh 'echo "Deploying..."'
         //     }
         // }
+
+         stage('Setup Ansible') {
+            steps {
+                echo "Installing required Ansible collections..."
+                // This command installs the general community collection
+                sh 'ansible-galaxy collection install community.general'
+            }
+        }
        stage('Deploy with Ansible') {
             steps {
                 sshagent(credentials: ['aws-ec2-key']) {

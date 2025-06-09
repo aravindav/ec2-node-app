@@ -2,6 +2,7 @@
 - name: Deploy Simple Node.js App
   hosts: app
   become: true
+
   tasks:
     - name: Update APT package cache
       ansible.builtin.apt:
@@ -25,8 +26,8 @@
       ansible.builtin.shell: /tmp/nodesource_setup.sh
       args:
         creates: /etc/apt/sources.list.d/nodesource.list
-   
-    - name: Install Node.js from NodeSource repository
+
+    - name: Install Node.js from NodeSource
       ansible.builtin.apt:
         name: nodejs
         state: present
@@ -40,18 +41,19 @@
         rsync_opts:
           - "--exclude=.git"
           - "--exclude=ansible"
+          - "--exclude=node_modules"
 
     - name: Install application dependencies
-      # CORRECTED: The npm module is in the community.general collection
-      community.general.npm:
-        path: /home/ubuntu/node-app/
+      ansible.builtin.shell: npm install
+      args:
+        chdir: /home/ubuntu/node-app/
 
-    - name: Stop any existing application process
-      ansible.builtin.shell:
-        cmd: "pkill -f 'node index.js' || true"
+    - name: Stop any running Node.js process
+      ansible.builtin.shell: |
+        pkill -f "node index.js" || true
 
-    - name: Start the application in the background
-      # CORRECTED: 'chdir' is a direct parameter of the shell module
-      ansible.builtin.shell:
-        cmd: "nohup node index.js > app.log 2>&1 &"
+    - name: Start the application using nohup
+      ansible.builtin.shell: |
+        nohup node index.js > app.log 2>&1 &
+      args:
         chdir: /home/ubuntu/node-app/

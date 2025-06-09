@@ -19,7 +19,7 @@
       ansible.builtin.get_url:
         url: https://deb.nodesource.com/setup_20.x
         dest: /tmp/nodesource_setup.sh
-        mode: '0755'
+        mode: "0755"
 
     - name: Execute NodeSource setup script
       ansible.builtin.shell:
@@ -42,20 +42,16 @@
           - "--exclude=ansible"
 
     - name: Install application dependencies
-      ansible.builtin.npm:
+      # CORRECTED: The npm module is in the community.general collection
+      community.general.npm:
         path: /home/ubuntu/node-app/
 
     - name: Stop any existing application process
       ansible.builtin.shell:
-        # This command finds any process with 'node index.js' and stops it.
-        # '|| true' ensures this step doesn't fail if the app isn't running.
         cmd: "pkill -f 'node index.js' || true"
 
     - name: Start the application in the background
+      # CORRECTED: 'chdir' is a direct parameter of the shell module
       ansible.builtin.shell:
-        # 'nohup' keeps the app running after we disconnect.
-        # '&' runs the command in the background.
-        # Logs will be saved to app.log in the app directory.
         cmd: "nohup node index.js > app.log 2>&1 &"
-      args:
         chdir: /home/ubuntu/node-app/

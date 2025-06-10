@@ -39,11 +39,6 @@
         owner: ubuntu
         group: ubuntu
         mode: preserve
-        exclude:
-          - "ansible"
-          - "Jenkinsfile"
-          - "venv"
-          - ".git"
 
     - name: Install npm dependencies
       npm:

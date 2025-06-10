@@ -1,0 +1,13 @@
+[Unit]
+Description=Node.js Application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/node-app
+ExecStart=/usr/bin/node index.js
+Restart=always
+Environment=NODE_ENV=production PORT=3000
+
+[Install]
+WantedBy=multi-user.target

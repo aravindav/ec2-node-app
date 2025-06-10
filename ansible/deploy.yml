@@ -32,13 +32,15 @@
         group: ubuntu
         mode: '0755'
 
-    - name: Copy Node.js app files
-      copy:
+    - name: Synchronize Node.js app files
+      synchronize:
         src: "{{ playbook_dir }}/../"
         dest: "{{ app_dir }}/"
-        owner: ubuntu
-        group: ubuntu
-        mode: preserve
+        rsync_opts:
+          - "--exclude=ansible"
+          - "--exclude=.git"
+          - "--exclude=venv"
+          - "--exclude=Jenkinsfile"
 
     - name: Install npm dependencies
       npm:

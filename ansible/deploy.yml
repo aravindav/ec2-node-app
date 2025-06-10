@@ -7,6 +7,8 @@
   vars:
     node_major_version: "18"
     app_path: "/home/ubuntu/node-app"
+    node_dist_release: "{{ 'jammy' if ansible_distribution_release == 'noble' else ansible_distribution_release }}"
+
 
   tasks:
     - name: Update APT package cache

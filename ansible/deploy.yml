@@ -2,6 +2,7 @@
 - name: Configure and Deploy Node.js Application
   hosts: app
   become: true
+  gather_facts: yes
 
   vars:
     node_major_version: "18"

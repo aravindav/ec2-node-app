@@ -1,43 +1,74 @@
 ---
-- name: Simple Node.js App Setup
-  hosts: app
-  become: true
+- name: Deploy Simple Node.js App
+  hosts: all
+  become: yes
+
+  vars:
+    app_dir: /home/ubuntu/simple-app
 
   tasks:
+
     - name: Update apt cache
       apt:
         update_cache: yes
 
-    - name: Install Node.js (from Ubuntu repo)
+    - name: Install Node.js and npm
       apt:
-        name: nodejs
+        name:
+          - nodejs
+          - npm
         state: present
 
-    - name: Install npm
-      apt:
-        name: npm
-        state: present
-
-    - name: Create app directory
+    - name: Remove old app directory if exists
       file:
-        path: /home/ubuntu/simple-app
+        path: "{{ app_dir }}"
+        state: absent
+
+    - name: Recreate app directory
+      file:
+        path: "{{ app_dir }}"
         state: directory
         owner: ubuntu
-
-    - name: Copy app files
-      copy:
-        src: ../app/
-        dest: /home/ubuntu/simple-app/
-        owner: ubuntu
+        group: ubuntu
         mode: '0755'
 
-    - name: Install dependencies
+    - name: Copy Node.js app files
+      copy:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ app_dir }}/"
+        owner: ubuntu
+        group: ubuntu
+        mode: preserve
+        exclude:
+          - "ansible"
+          - "Jenkinsfile"
+          - "venv"
+          - ".git"
+
+    - name: Install npm dependencies
       npm:
-        path: /home/ubuntu/simple-app
+        path: "{{ app_dir }}"
+        production: yes
+
+    - name: Start the Node.js app with nohup
+      shell: |
+        nohup node index.js > app.log 2>&1 &
+      args:
+        chdir: "{{ app_dir }}"
+      async: 0
+      poll: 0
       become_user: ubuntu
 
-    - name: Start the app (background)
-      shell: nohup npm start > output.log 2>&1 &
-      args:
-        chdir: /home/ubuntu/simple-app
-      become_user: ubuntu
+    # Optional: Replace above with pm2 if needed in production
+    # - name: Install pm2 globally
+    #   npm:
+    #     name: pm2
+    #     global: yes
+
+    # - name: Start app using pm2
+    #   shell: |
+    #     pm2 start index.js --name my-app
+    #     pm2 save
+    #   args:
+    #     chdir: "{{ app_dir }}"
+    #   become_user: ubuntu

@@ -54,13 +54,21 @@ pipeline {
             }
         }
 
+        stage('Verify Ansible Installation') {
+            steps {
+                sh '''
+                    . ${VENV_DIR}/bin/activate
+                    ansible --version
+                '''
+            }
+        }
+
         stage('Deploy with Ansible') {
             steps {
                 sshagent(credentials: ['aws-ec2-key']) {
                     sh '''
                         . ${VENV_DIR}/bin/activate
-                        ansible-playbook -i ansible/inventory.ini ansible/deploy.yml \
-                        --ssh-extra-args "-o StrictHostKeyChecking=no"
+                        ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --ssh-extra-args "-o StrictHostKeyChecking=no"
                     '''
                 }
             }
